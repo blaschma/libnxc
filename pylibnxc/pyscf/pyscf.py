@@ -1,4 +1,5 @@
 from pyscf import dft
+import pyscf.dft as dft
 from pyscf.lib.numpy_helper import NPArrayWithTag
 from ..adapters import PySCFNXC, NXCAdapter, get_nxc_adapter
 from ..functional import AtomicFunc, GridFunc, HMFunc, LibNXCFunctional
@@ -18,12 +19,14 @@ def KS(mol, method, nxc='', nxc_kind='grid', **kwargs):
             model = get_nxc_adapter('pyscf', nxc)
             mf.get_veff = veff_mod_atomic(mf, model)
         elif nxc_kind.lower() == 'grid':
-            parsed_xc = parse_xc_code(nxc)
+            parsed_xc = parse_xc_code(nxc)            
             dft.libxc.define_xc_(mf._numint,
                                  eval_xc,
                                  find_max_level(parsed_xc),
                                  hyb=parsed_xc[0][0])
+
             mf.xc = nxc
+            mf._numint.nlc_coeff = nlc_coeff
         else:
             raise ValueError(
                 "{} not a valid nxc_kind. Valid options are 'atomic' or 'grid'"
@@ -34,8 +37,14 @@ def KS(mol, method, nxc='', nxc_kind='grid', **kwargs):
 RKS = partial(KS, method=dft.RKS)
 UKS = partial(KS, method=dft.UKS)
 
+def nlc_coeff(xc_code):
+    #TODO: Remove hard coded part
+    if(xc_code == 'GGA_XC_PBE'):
+        return (((1.0, 0.0), 1),)
+    else:
+        raise ValueError(f'nlc_coeff not implemented for {xc_code}')
 
-def eval_xc(xc_code, rho, spin=0, relativity=0, deriv=1, verbose=None):
+def eval_xc(xc_code, rho, spin=0, relativity=0, deriv=1, omega=None, verbose=None):
     """ Evaluation for grid-based models (not atomic)
         See pyscf documentation of eval_xc
     """
@@ -73,6 +82,8 @@ def eval_xc(xc_code, rho, spin=0, relativity=0, deriv=1, verbose=None):
     total_output['zk'] = 0
 
     for code, factor in parsed_xc[1]:
+        #MB
+        name = list(dft.libxc.XC_CODES.keys())[list(dft.libxc.XC_CODES.values()).index(code)]        
         model = LibNXCFunctional(code, kind='grid')
         output = model.compute(inp)
         for key in output:

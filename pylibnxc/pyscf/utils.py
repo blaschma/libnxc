@@ -31,6 +31,7 @@ def parse_xc_code(xc_code):
         cnt += 1
 
     pars, funcs = parsed
+    funcs = list(funcs)
 
     for i, f in enumerate(funcs):
         code, weight = f
@@ -40,8 +41,8 @@ def parse_xc_code(xc_code):
             name = find_in_codes(code)
         funcs[i] = (name, weight)
 
-    dft.libxc.XC_KEYS = orig_keys
-    dft.libxc.XC_CODES = orig_codes
+    #dft.libxc.XC_KEYS = orig_keys
+    #dft.libxc.XC_CODES = orig_codes
     return parsed
 
 
@@ -52,7 +53,12 @@ def find_max_level(parsed_xc):
     highest_xc = 'LDA'
     highest_level = 0
     for xc in parsed_xc:
-        l = xc[0].split('_')[0]
+
+        l = xc[0]
+        l = list(dft.libxc.XC_CODES.keys())[list(dft.libxc.XC_CODES.values()).index(l)]
+        l = l.split('_')[0]
+
+        
         if xc_levels[l] > highest_level:
             highest_xc = l
             highest_level = xc_levels[l]

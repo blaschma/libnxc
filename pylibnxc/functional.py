@@ -10,6 +10,7 @@ import os
 from glob import glob
 import torch
 from abc import ABC, abstractmethod
+import pyscf.dft as dft
 
 _default_modelpath = os.path.dirname(__file__) + '/../models/'
 
@@ -31,7 +32,9 @@ def LibNXCFunctional(name, **kwargs):
     """
     #Resolve path
     model_path = os.environ.get('NXC_MODELPATH', _default_modelpath)
-
+    #MB: get name from XC_CODES
+    name = list(dft.libxc.XC_CODES.keys())[list(dft.libxc.XC_CODES.values()).index(name)]        
+    print(name)
     #Check if name is path
     if os.path.exists(name):
         path = name
@@ -179,6 +182,7 @@ class GridFunc(NXCFunctional):
         if self.safe_mode:
             for key in outputs:
                 outputs[key] = np.nan_to_num(outputs[key], copy=False)
+        #print("func_output", outputs)
         return outputs
 
 
