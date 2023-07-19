@@ -38,11 +38,9 @@ RKS = partial(KS, method=dft.RKS)
 UKS = partial(KS, method=dft.UKS)
 
 def nlc_coeff(xc_code):
-    #TODO: Remove hard coded part
-    if(xc_code == 'GGA_XC_PBE'):
-        return (((1.0, 0.0), 1),)
-    else:
-        raise ValueError(f'nlc_coeff not implemented for {xc_code}')
+    #TODO: check    
+    return (((1.0, 0.0), 1),)
+
 
 def eval_xc(xc_code, rho, spin=0, relativity=0, deriv=1, omega=None, verbose=None):
     """ Evaluation for grid-based models (not atomic)
